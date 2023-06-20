@@ -6,21 +6,20 @@ import { NewsService } from 'src/app/services/news.service';
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
-  styleUrls: ['tab2.page.scss']
+  styleUrls: ['tab2.page.scss'],
 })
-export class Tab2Page implements OnInit{
+export class Tab2Page implements OnInit {
+  @ViewChild(IonInfiniteScroll, { static: true })
+  infiniteScroll!: IonInfiniteScroll;
 
-  @ViewChild(IonInfiniteScroll, {static: true}) infiniteScroll!: IonInfiniteScroll;
-
-  public categories: string[] = 
-  [
+  public categories: string[] = [
     'business',
     'entertainment',
     'general',
     'health',
     'science',
     'sports',
-    'technology'
+    'technology',
   ];
 
   public selectedCategory: string = this.categories[0];
@@ -29,36 +28,37 @@ export class Tab2Page implements OnInit{
 
   constructor(private newsService: NewsService) {}
 
-  ngOnInit(){
-    console.log(this.infiniteScroll)
-    this.newsService.getTopHeadlinesByCategory(this.selectedCategory)
-    .subscribe(articles =>{
-      this.articles = [...articles]
-    })
+  ngOnInit() {
+    this.newsService
+      .getTopHeadlinesByCategory(this.selectedCategory)
+      .subscribe((articles) => {
+        this.articles = [...articles];
+      });
   }
 
-  segmentChanged(event: Event){
+  segmentChanged(event: Event) {
     this.selectedCategory = (event as CustomEvent).detail.value;
-    this.newsService.getTopHeadlinesByCategory(this.selectedCategory)
-    .subscribe(articles =>{
-      this.articles = [...articles]
-    })
+    this.newsService
+      .getTopHeadlinesByCategory(this.selectedCategory)
+      .subscribe((articles) => {
+        this.articles = [...articles];
+      });
   }
 
   loadData() {
-    this.newsService.getTopHeadlinesByCategory(this.selectedCategory, true)
-    .subscribe(articles => {
+    this.newsService
+      .getTopHeadlinesByCategory(this.selectedCategory, true)
+      .subscribe(articles => {
+        if (articles.length === this.articles.length) {
+          this.infiniteScroll.disabled = true;
+          //event.target.disabled = true;
+          return;
+        }
 
-      if(articles.length === this.articles.length){
-        this.infiniteScroll.disabled = true;
-        //event.target.disabled = true;
-        return;
-      }
-
-      this.articles = articles;
-      this.infiniteScroll.complete();
-      //event.target.complete();
-    })
+        this.articles = articles;
+        console.log('first', this.articles)
+        this.infiniteScroll.complete();
+        //event.target.complete();
+      });
   }
-
 }

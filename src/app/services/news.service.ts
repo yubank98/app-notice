@@ -2,7 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 
-import { NewsResponse, Article, ArticlesByCategoryAndPage } from '../interfaces';
+import {
+  NewsResponse,
+  Article,
+  ArticlesByCategoryAndPage,
+} from '../interfaces';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -13,20 +17,18 @@ const apiUrl = environment.apiUrl;
   providedIn: 'root',
 })
 export class NewsService {
-
-  private articlesByCategoryAndPage: ArticlesByCategoryAndPage = {}
+  private articlesByCategoryAndPage: ArticlesByCategoryAndPage = {};
 
   constructor(private http: HttpClient) {}
 
-  private executeQuery<T>( endpoint: string) {
-    console.log('Peticion HTTP realizada')
-
-    return this.http.get<T>(`${apiUrl}${endpoint}`,{
-      params:{
+  private executeQuery<T>(endpoint: string) {
+    console.log('petición');
+    return this.http.get<T>(`${apiUrl}${endpoint}`, {
+      params: {
         apiKey: apiKey,
         country: 'us',
-      }
-    })
+      },
+    });
   }
 
   getTopHeadLines(): Observable<Article[]> {
@@ -37,22 +39,30 @@ export class NewsService {
     // .pipe(map(({articles}) => articles));
   }
 
-  getTopHeadlinesByCategory(category: string, loadMore: boolean = false):Observable<Article[]> {
-    if(loadMore){
-      this.getArticlesBycategory(category);
+  getTopHeadlinesByCategory(
+    category: string,
+    loadMore: boolean = false
+  ): Observable<Article[]> {
+    if (loadMore) {
+      this.getArticlesByCategory(category);
     }
 
-    if(this.articlesByCategoryAndPage[category]){
+    if (this.articlesByCategoryAndPage[category]) {
       return of(this.articlesByCategoryAndPage[category].articles);
     }
-    
-    return this.getArticlesBycategory(category)
+
+    return this.getArticlesByCategory(category);
   }
 
-  private getArticlesBycategory(category:string): Observable<Article[]>{
-    if(Object.keys(this.articlesByCategoryAndPage).includes(category)){
-      //this.articlesByCategoryAndPage[category].page += 1;
+  private getArticlesByCategory( category: string ): Observable<Article[]> {
+
+ 
+
+    if ( Object.keys( this.articlesByCategoryAndPage ).includes(category) ) {
+      // Ya existe
+      // this.articlesByCategoryAndPage[category].page += 0;
     } else {
+      // No existe
       this.articlesByCategoryAndPage[category] = {
         page: 0,
         articles: []
@@ -60,18 +70,22 @@ export class NewsService {
     }
 
     const page = this.articlesByCategoryAndPage[category].page + 1;
-    return this.executeQuery<NewsResponse>(`/top-headlines?category=${category}&page=${page}`)
+
+    return this.executeQuery<NewsResponse>(`/top-headlines?category=${ category }&page=${ page }`)
     .pipe(
-      map(({articles}) => {
-        if(articles.length === 0) return this.articlesByCategoryAndPage[category].articles;
-console.log(articles.length)
+      map( ({ articles }) => {
+
+        if ( articles.length === 0 ) return this.articlesByCategoryAndPage[category].articles;
+
         this.articlesByCategoryAndPage[category] = {
           page: page,
-          articles: [...this.articlesByCategoryAndPage[category].articles, ...articles]
+          articles: [ ...this.articlesByCategoryAndPage[category].articles, ...articles ]
         }
 
         return this.articlesByCategoryAndPage[category].articles;
       })
-    );
+    )
+  }  
+  
+
   }
-}

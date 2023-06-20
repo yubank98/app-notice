@@ -1,8 +1,14 @@
 import { Component, Input } from '@angular/core';
-import { ActionSheetButton, ActionSheetController, Platform } from '@ionic/angular';
+import {
+  ActionSheetButton,
+  ActionSheetController,
+  Platform,
+} from '@ionic/angular';
 
 import { InAppBrowser } from '@awesome-cordova-plugins/in-app-browser/ngx';
 import { SocialSharing } from '@awesome-cordova-plugins/social-sharing/ngx';
+
+import { StorageService } from '../../services/storage.service';
 
 import { Article } from '../../interfaces';
 
@@ -12,20 +18,19 @@ import { Article } from '../../interfaces';
   styleUrls: ['./article.component.scss'],
 })
 export class ArticleComponent {
-
   @Input() article!: Article;
   @Input() index!: number;
 
-
   constructor(
-    private iab: InAppBrowser, 
+    private iab: InAppBrowser,
     private platform: Platform,
     private actionSheetCtrl: ActionSheetController,
     private socialSharing: SocialSharing,
-    ) { }
+    private storageService: StorageService
+  ) {}
 
-  openArticle(){
-    if( this.platform.is('ios') || this.platform.is('android') ) {
+  openArticle() {
+    if (this.platform.is('ios') || this.platform.is('android')) {
       const browser = this.iab.create(this.article.url);
       browser.show();
       return;
@@ -33,45 +38,51 @@ export class ArticleComponent {
     window.open(this.article.url, '_blank');
   }
 
-  async onOpenMenu(){
+  async onOpenMenu() {
+
+    const articleInFavorite = this.storageService.articleInFavorites(
+      this.article
+    );
+
     const normalBtns: ActionSheetButton[] = [
       {
-        text: 'Favorito',
-        icon: 'heart-outline',
-        handler: () => this.onToggleFavorite()
+        text: articleInFavorite ? 'Remover favorito' : 'Favorito',
+        icon: articleInFavorite ? 'heart' : 'heart-outline',
+        handler: () => this.onToggleFavorite(),
       },
       {
         text: 'Cancelar',
         icon: 'close-outline',
-        role: 'cancel'
-      }
-    ]
+        role: 'cancel',
+      },
+    ];
     const shareBtn: ActionSheetButton = {
       text: 'Compartir',
       icon: 'share-outline',
-      handler: () => this.onShareArticle()
-    }
-    if(this.platform.is('capacitor')){
+      handler: () => this.onShareArticle(),
+    };
+    if (this.platform.is('capacitor')) {
       normalBtns.unshift(shareBtn);
     }
 
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Opciones',
-      buttons: normalBtns
+      buttons: normalBtns,
     });
 
     await actionSheet.present();
   }
 
-  onShareArticle(){
+  onShareArticle() {
     this.socialSharing.share(
       this.article.title,
       this.article.source.name,
+      '',
       this.article.url
     );
   }
 
-  onToggleFavorite(){
-    console.log('Toggle article')
+  onToggleFavorite() {
+    this.storageService.saveRemoveArticle(this.article);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Article } from '../../interfaces';
 
 @Component({
@@ -11,6 +11,6 @@ export class ArticlesComponent {
   @Input() articles: Article[] = [];
   constructor() { }
 
-  ngOnInit() {}
+
 
 }
